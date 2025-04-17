@@ -1,0 +1,8 @@
+trials: 10
+max_total_time: 86400
+docker_registry: gcr.io/fuzzbench
+experiment_filestore: /dev/shm/user/experiment-data
+report_filestore: /dev/shm/user/report-data
+snapshot_period: 900
+local_experiment: true
+runner_num_cpu_cores: 1

@@ -1,0 +1,13 @@
+diff --git a/experiment/run_experiment.py b/experiment/run_experiment.py
+index 4771dfeb..83168420 100644
+--- a/experiment/run_experiment.py
++++ b/experiment/run_experiment.py
+@@ -519,7 +519,7 @@ class LocalDispatcher(BaseDispatcher):
+         command = [
+             'docker',
+             'run',
+-            '-ti',
++            '-t',
+             '--rm',
+             '-v',
+             '/var/run/docker.sock:/var/run/docker.sock',
