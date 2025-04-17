@@ -1,0 +1,132 @@
+diff --git a/docker/Dockerfile b/docker/Dockerfile
+index 07666f5f..ed171392 100644
+--- a/docker/Dockerfile
++++ b/docker/Dockerfile
+@@ -25,43 +25,50 @@ ENV RANLIB /usr/bin/ranlib
+ 
+ ARG USER_ID=1000
+ ARG GROUP_ID=1000
+-RUN mkdir -p /home && \
+-	groupadd -g ${GROUP_ID} magma && \
+-	useradd -l -u ${USER_ID} -K UMASK=0000 -d /home -g magma magma && \
+-	chown magma:magma /home
+-RUN	echo "magma:amgam" | chpasswd && usermod -a -G sudo magma
++RUN mkdir -p /home
++# RUN mkdir -p /home && \
++# 	groupadd -g ${GROUP_ID} magma && \
++# 	useradd -l -u ${USER_ID} -K UMASK=0000 -d /home -g magma magma && \
++# 	chown magma:magma /home
++# RUN	echo "magma:amgam" | chpasswd && usermod -a -G sudo magma
+ 
+ RUN mkdir -p ${SHARED} ${OUT} && \
+-	chown magma:magma ${SHARED} ${OUT} && \
++	# chown magma:magma ${SHARED} ${OUT} && \
+ 	chmod 744 ${SHARED} ${OUT}
+ 
+ ARG magma_path=magma
+ ENV MAGMA 	${MAGMA_R}/${magma_path}
+ USER root:root
+-RUN mkdir -p ${MAGMA} && chown magma:magma ${MAGMA}
+-COPY --chown=magma:magma ${magma_root}/${magma_path} ${MAGMA}/
++RUN mkdir -p ${MAGMA}
++# RUN mkdir -p ${MAGMA} && chown magma:magma ${MAGMA}
++COPY ${magma_root}/${magma_path} ${MAGMA}/
++# COPY --chown=magma:magma ${magma_root}/${magma_path} ${MAGMA}/
+ RUN ${MAGMA}/preinstall.sh
+-USER magma:magma
++# USER magma:magma
+ RUN ${MAGMA}/prebuild.sh
+ 
+ ARG fuzzer_name
+ ARG fuzzer_path=fuzzers/${fuzzer_name}
+ ENV FUZZER 	${MAGMA_R}/${fuzzer_path}
+ USER root:root
+-RUN mkdir -p ${FUZZER} && chown magma:magma ${FUZZER}
+-COPY --chown=magma:magma ${magma_root}/${fuzzer_path} ${FUZZER}/
++# RUN mkdir -p ${FUZZER} && chown magma:magma ${FUZZER}
++RUN mkdir -p ${FUZZER}
++# COPY --chown=magma:magma ${magma_root}/${fuzzer_path} ${FUZZER}/
++COPY ${magma_root}/${fuzzer_path} ${FUZZER}/
+ RUN ${FUZZER}/preinstall.sh
+-USER magma:magma
++# USER magma:magma
+ RUN ${FUZZER}/fetch.sh && ${FUZZER}/build.sh
+ 
+ ARG target_name
+ ARG target_path=targets/${target_name}
+ ENV TARGET 	${MAGMA_R}/${target_path}
+ USER root:root
+-RUN mkdir -p ${TARGET} && chown magma:magma ${TARGET}
+-COPY --chown=magma:magma ${magma_root}/${target_path} ${TARGET}/
++# RUN mkdir -p ${TARGET} && chown magma:magma ${TARGET}
++RUN mkdir -p ${TARGET}
++# COPY --chown=magma:magma ${magma_root}/${target_path} ${TARGET}/
++COPY ${magma_root}/${target_path} ${TARGET}/
+ RUN ${TARGET}/preinstall.sh
+-USER magma:magma
++# USER magma:magma
+ RUN ${TARGET}/fetch.sh && ${MAGMA}/apply_patches.sh
+ 
+ ## Configuration parameters
+diff --git a/tools/captain/build.sh b/tools/captain/build.sh
+index 93995002..7b62683c 100755
+--- a/tools/captain/build.sh
++++ b/tools/captain/build.sh
+@@ -45,8 +45,8 @@ set -x
+ docker build -t "$IMG_NAME" \
+     --build-arg fuzzer_name="$FUZZER" \
+     --build-arg target_name="$TARGET" \
+-    --build-arg USER_ID=$(id -u $USER) \
+-    --build-arg GROUP_ID=$(id -g $USER) \
++    --build-arg USER_ID=$(id -u 6017) \
++    --build-arg GROUP_ID=$(id -g 6017) \
+     $mode_flag $isan_flag $harden_flag \
+     -f "$MAGMA/docker/Dockerfile" "$MAGMA"
+ set +x
+diff --git a/tools/captain/start.sh b/tools/captain/start.sh
+index fd6d06c9..e17612d6 100755
+--- a/tools/captain/start.sh
++++ b/tools/captain/start.sh
+@@ -50,6 +50,7 @@ if [ ! -z "$SHARED" ]; then
+     SHARED="$(realpath "$SHARED")"
+     flag_volume="--volume=$SHARED:/magma_shared"
+ fi
++#chown 6017:7100 "$SHARED"
+ 
+ if [ -t 1 ]; then
+     docker run -it $flag_volume \
+diff --git a/tools/report_df/BenchmarkData.py b/tools/report_df/BenchmarkData.py
+index 8d14c9ec..d405d3e8 100644
+--- a/tools/report_df/BenchmarkData.py
++++ b/tools/report_df/BenchmarkData.py
+@@ -3,7 +3,7 @@ from pandas import DataFrame
+ import numpy as np
+ import sys
+ import json
+-from collections import Mapping, Iterable
++from _collections_abc import Mapping, Iterable
+ 
+ INDEX_NAMES = ['Fuzzer', 'Target','Program','Campaign','Metric','BugID']
+ 
+diff --git a/tools/report_df/main.py b/tools/report_df/main.py
+index 7b6dd338..aecef09d 100644
+--- a/tools/report_df/main.py
++++ b/tools/report_df/main.py
+@@ -23,6 +23,8 @@ def parse_args():
+         help=("Controls the verbosity of messages. "
+             "-v prints info. -vv prints debug. Default: warnings and higher.")
+         )
++    parser.add_argument('-d', '--duration', type=int, default=7 * 24 * 60 * 60)
++    parser.add_argument('-t', '--trials', type=int, default=10)
+     return parser.parse_args()
+ 
+ def configure_verbosity(level):
+@@ -38,7 +40,7 @@ def configure_verbosity(level):
+ def main():
+     args = parse_args()
+     configure_verbosity(args.verbose)
+-    bd = BenchmarkData(args.json, config={'duration': 7 * 24 * 60 * 60, 'trials': 10})
++    bd = BenchmarkData(args.json, config={'duration': args.duration, 'trials': args.trials})
+     generate_report(bd, args.outdir)
+ 
+ if __name__ == '__main__':
