@@ -3,14 +3,15 @@ export
 # need to use "source" command
 SHELL=/bin/bash
 
-DIR=/dev/shm/user/fuzzbench
-PYTHON_VERSION=3.10.15
-FUZZBENCH_VERSION=4a47f4b
+# Change to the settings you want to use
+DIR=/dev/shm/user/fuzzbench		# experiment store directory
+PYTHON_VERSION=3.10.15			# python version
+FUZZBENCH_VERSION=4a47f4b		# fuzzbench version
 
 PYENV_ROOT="${HOME}/.pyenv"
 PYTHONPATH=${DIR}
 
-# experiment configs
+# read experiment configs
 config=fuzzbench-config.yaml
 experiment_filestore=`cat ${config} | grep "experiment_filestore:" -m1 | awk '{print $$2}'`
 report_filestore=`cat ${config} | grep "report_filestore:" -m1 | awk '{print $$2}'`
