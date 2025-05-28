@@ -4,9 +4,12 @@ export
 SHELL=/bin/bash
 
 # Change to the settings you want to use
-DIR=/dev/shm/user/fuzzbench		# experiment store directory
-PYTHON_VERSION=3.10.15			# python version
-FUZZBENCH_VERSION=4a47f4b		# fuzzbench version
+# experiment store directory
+DIR=/dev/shm/user/fuzzbench
+# python version
+PYTHON_VERSION=3.10.15
+# fuzzbench version
+FUZZBENCH_VERSION=4a47f4b
 
 PYENV_ROOT="${HOME}/.pyenv"
 PYTHONPATH=${DIR}
@@ -27,7 +30,7 @@ clone:
 	git clone https://github.com/google/fuzzbench.git ${DIR} && \
 	cd ${DIR} && \
 	git checkout ${FUZZBENCH_VERSION} && \
-	echo "${PYTHON_VERSION}" > ${DIR}/.python-version
+	echo "${PYTHON_VERSION}" > "${DIR}/.python-version"
 
 pyenv:
 	command -v pyenv >/dev/null || export PATH="${PYENV_ROOT}/bin:${PATH}"
