@@ -33,10 +33,12 @@ captainrc:
 	echo POLL=30 >> ${DIR}/captainrc && \
 	echo WORKER_MODE=1 >> ${DIR}/captainrc && \
 	echo MAGMA=${DIR} >> ${DIR}/captainrc && \
-	echo "FUZZERS=(acecov_old_n4_128kb no_acecov_old_128kb ddfuzz_128kb)" >> ${DIR}/captainrc && \
-	echo "acecov_old_n4_128kb_TARGETS=(libpng libsndfile libtiff libxml2 lua openssl php sqlite3)" >> ${DIR}/captainrc
-	echo "no_acecov_old_128kb_TARGETS=(libpng libsndfile libtiff libxml2 lua openssl php sqlite3)" >> ${DIR}/captainrc
-	echo "ddfuzz_128kb_TARGETS=(libpng libsndfile libtiff libxml2 lua openssl php sqlite3)" >> ${DIR}/captainrc
+	FUZZERS=`cat ${config} | grep "FUZZERS:" -m1 | sed -n 's/^FUZZERS: "\([^"]*\)"/\1/p'` && \
+	echo "FUZZERS=($${FUZZERS})" >> ${DIR}/captainrc && \
+	BENCHMARKS=`cat ${config} | grep "BENCHMARKS:" -m1 | sed -n 's/^BENCHMARKS: "\([^"]*\)"/\1/p'` && \
+	for fuzzer in $${FUZZERS}; do \
+		echo "$${fuzzer}_TARGETS=($${BENCHMARKS})" >> $${DIR}/captainrc ; \
+	done
 
 run:
 	cd ${DIR} && \
