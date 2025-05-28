@@ -44,7 +44,7 @@ run:
 	cd ${DIR} && \
 	command -v pyenv >/dev/null || export PATH="${PYENV_ROOT}/bin:${PATH}" && \
 	eval "$$(pyenv init -)" && \
-	bash tools/captain/run.sh /dev/shm/yoshida/magma/captainrc > /dev/shm/yoshida/magma-log 2>&1 &
+	bash tools/captain/run.sh ${DIR}/captainrc > ${DIR}/magma-log 2>&1 &
 
 # Output MAGMA log continuously
 tail:
