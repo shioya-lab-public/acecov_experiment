@@ -20,7 +20,9 @@ experiment_filestore=`cat ${config} | grep "experiment_filestore:" -m1 | awk '{p
 report_filestore=`cat ${config} | grep "report_filestore:" -m1 | awk '{print $$2}'`
 docker_registry=`cat ${config} | grep "docker_registry:" -m1 | awk '{print $$2}'`
 
-experiment_fuzzers=`cat config.yaml | grep "fuzzers:" -m1 | awk '{print $$2}'`
+experiment_fuzzers=`cat config.yaml | grep "fuzzers:" -m1 | sed -n 's/^fuzzers: "\([^"]*\)"/\1/p'`
+experiment_benchmark=`cat config.yaml | grep "benchmarks:" -m1 | sed -n 's/^benchmarks: "\([^"]*\)"/\1/p'`
+experiment_name=`cat config.yaml | grep "experiment_name:" -m1 | sed -n 's/^experiment_name: "\([^"]*\)"/\1/p'`
 
 # path to log output
 CONSOLE_OUT=/dev/shm/user/log
@@ -57,17 +59,17 @@ run:
 	mkdir -p ${report_filestore} && \
 	python3.10 ${DIR}/experiment/run_experiment.py \
 		--experiment-config ${config} \
-		--experiment-name old-ddfuzz-1cpu-150parallel \
+		--experiment-name ${experiment_name} \
         --allow-uncommitted-changes \
 		--runners-cpus 130 \
 		--measurers-cpus 5 \
-		--benchmarks curl_curl_fuzzer_http freetype2_ftfuzzer harfbuzz_hb-shape-fuzzer libjpeg-turbo_libjpeg_turbo_fuzzer libpcap_fuzz_both libpng_libpng_read_fuzzer libxml2_xml libxslt_xpath openssl_x509 re2_fuzzer stb_stbi_read_fuzzer vorbis_decode_fuzzer woff2_convert_woff2ttf_fuzzer \
-		--fuzzers acecov_old_n4_ddfuzz no_acecov_old_ddfuzz ddfuzz128kb \
+		--benchmarks ${experiment_benchmark} \
+		--fuzzers ${experiment_fuzzers} \
 		> ${CONSOLE_OUT} 2>&1 &
 
 report:
 	source ${DIR}/.venv/bin/activate && \
-	python3.10 parse.py -o ${report_filestore}/old-ddfuzz-1cpu-150parallel
+	python3.10 parse.py -o ${report_filestore}/${experiment_name}
 
 # Output fuzzbench log continuously
 tail:
